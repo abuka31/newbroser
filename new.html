@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Поиск на русском с фото и видео (Pexels) и Google</title>
+<style>
+  /* Современный стиль */
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    margin: 0; padding: 0;
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #0078d7;
+    color: white;
+    padding: 1rem 1.5rem;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    user-select: none;
+    position: relative;
+  }
+  main {
+    flex: 1;
+    max-width: 1024px;
+    margin: 1rem auto 3rem;
+    width: 90%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    padding: 1rem 1.5rem;
+  }
+  form {
+    display: flex;
+    margin-bottom: 1rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  input[type=text] {
+    flex: 1;
+    font-size: 1.1rem;
+    padding: 0.6rem 1rem;
+    border: 2px solid #ddd;
+    border-radius: 24px 0 0 24px;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  input[type=text]:focus {
+    border-color: #0078d7;
+  }
+  button {
+    background: #0078d7;
+    border: none;
+    color: white;
+    padding: 0 1.5rem;
+    font-size: 36px;
+    border-radius: 0 24px 24px 0;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background: #005fa3;
+  }
+  /* Кнопка истории */
+  #history-btn {
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  #history-btn:hover {
+    background: white;
+    color: #0078d7;
+  }
+  nav {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  nav button {
+    background: #e1e4e8;
+    border: none;
+    padding: 0.5rem 1.3rem;
+    border-radius: 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.25s;
+  }
+  nav button.active,
+  nav button:hover {
+    background: #0078d7;
+    color: white;
+  }
+  #results {
+    min-height: 300px;
+  }
+  .search-item, .news-item {
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid #ddd;
+  }
+  .search-item .title,
+  .news-item .title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0078d7;
+    text-decoration: none;
+  }
+  .search-item .title:hover,
+  .news-item .title:hover {
+    text-decoration: underline;
+  }
+  .snippet {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 0.2rem;
+  }
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+    gap: 12px;
+  }
+  .image-grid img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  .image-grid img:hover {
+    transform: scale(1.05);
+  }
+  .video-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(280px,1fr));
+    gap: 16px;
+  }
+  video {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+  }
+  #map-container iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .status-message {
+    font-size: 1rem;
+    color: #666;
+    text-align: center;
+    padding: 2rem 0;
+  }
+  @media(max-width: 600px) {
+    nav {
+      justify-content: space-around;
+    }
+    form {
+      flex-wrap: wrap;
+    }
+    #history-btn {
+      margin-top: 0.5rem;
+      width: 100%;
+      border-radius: 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>Поиск с фото и видео (Pexels) и Google на русском</header>
+
+<main>
+  <form id="search-form">
+    <input type="text" id="search-input" placeholder="Введите запрос..." required autocomplete="off" />
+    <button type="submit">Поиск</button>
+    <button type="button" id="history-btn" title="История поиска">История поиска</button>
+  </form>
+
+  <nav>
+    <button data-tab="all" class="active">Всё</button>
+    <button data-tab="images">Фото</button>
+    <button data-tab="videos">Видео</button>
+    <button data-tab="news">Новости</button>
+    <button data-tab="maps">Карты</button>
+  </nav>
+
+  <div id="results" aria-live="polite"><p class="status-message">Введите запрос для поиска</p></div>
+</main>
+
+<script>
+  const API_KEY = 'AIzaSyBdMHsKaVGctMQuEneXwNnwF4XtK6uF-8U'; // Google API key
+  const CX = 'f06590ad309d747e7'; // Google Custom Search ID
+  const PEXELS_API_KEY = 'ni16bHs738vMevfjf6Stwewpl5bGni5HiXVrjWyVQrdAqnKeTbmwKmsk';
+
+  const form = document.getElementById('search-form');
+  const input = document.getElementById('search-input');
+  const resultsContainer = document.getElementById('results');
+  const tabs = document.querySelectorAll('nav button');
+  const historyBtn = document.getElementById('history-btn');
+
+  let currentTab = 'all';
+
+  // Экранирование HTML для безопасности
+  function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[m];
+    });
+  }
+
+  // Сохраняем историю поиска в localStorage
+  function saveSearchHistory(query) {
+    if (!query) return;
+    let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+    // Добавляем в начало, если нет такого запроса (чтобы не дублировать)
+    if (!history.includes(query)) {
+      history.unshift(query);
+      // Оставим максимум 30 запросов
+      if (history.length > 30) history.pop();
+      localStorage.setItem('searchHistory', JSON.stringify(history));
+    }
+  }
+
+  // Обработчик выбора вкладок
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.dataset.tab === currentTab) return;
+      currentTab = tab.dataset.tab;
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      if (input.value.trim()) {
+        doSearch(input.value.trim());
+      } else {
+        resultsContainer.innerHTML = '<p class="status-message">Введите запрос для поиска</p>';
+      }
+    });
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
+    saveSearchHistory(query);
+    doSearch(query);
+  });
+
+  historyBtn.addEventListener('click', () => {
+    // Открыть новую страницу истории
+    window.open('history.html', '_blank');
+  });
+
+  async function doSearch(query) {
+    resultsContainer.innerHTML = '<p class="status-message">Загрузка...</p>';
+
+    switch (currentTab) {
+      case 'all':
+        resultsContainer.innerHTML = '';
+        await doWebSearch(query);
+        await doPexelsPhotoSearch(query);
+        await doPexelsVideoSearch(query);
+        break;
+      case 'images':
+        resultsContainer.innerHTML = '';
+        await doPexelsPhotoSearch(query);
+        break;
+      case 'videos':
+        resultsContainer.innerHTML = '';
+        await doPexelsVideoSearch(query);
+        break;
+      case 'news':
+        resultsContainer.innerHTML = '';
+        await doNewsSearch(query);
+        break;
+      case 'maps':
+        resultsContainer.innerHTML = '';
+        showMap(query);
+        break;
+      default:
+        resultsContainer.innerHTML = '<p class="status-message">Выберите вкладку.</p>';
+    }
+  }
+
+  // Поиск веб через Google Custom Search (на русском)
+  async function doWebSearch(query) {
+    try {
+      const res = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX}&q=${encodeURIComponent(query)}&lr=lang_ru&num=8`);
+      if (!res.ok) throw new Error(`Ошибка сети: ${res.status}`);
+      const data = await res.json();
+      if (!data.items || data.items.length === 0) {
+        resultsContainer.insertAdjacentHTML('beforeend', '<p class="status-message">Веб-результаты не найдены.</p>');
+        return;
+      }
+      data.items.forEach(item => {
+        resultsContainer.insertAdjacentHTML('beforeend', `
+          <div class="search-item">
+            <a href="${item.link}" target="_blank" class="title">${escapeHtml(item.title)}</a>
+            <p class="snippet">${escapeHtml(item.snippet)}</p>
+          </div>`);
+      });
+    } catch (e) {
+      resultsContainer.insertAdjacentHTML('beforeend', `<p class="status-message">Ошибка веб-поиска: ${e.message}</p>`);
+    }
+  }
+
+  // Поиск фото в Pexels
+  async function doPexelsPhotoSearch(query) {
+    try {
+      const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12`, {
+        headers: { Authorization: PEXELS_API_KEY }
+      });
+      if (!res.ok) throw new Error(`Ошибка сети: ${res.status}`);
+      const data = await res.json();
+      if (!data.photos || data.photos.length === 0) {
+        resultsContainer.insertAdjacentHTML('beforeend', '<p class="status-message">Фото не найдены.</p>');
+        return;
+      }
+      let html = '<div class="image-grid">';
+      data.photos.forEach(photo => {
+        html += `<a href="${photo.url}" target="_blank" title="${escapeHtml(photo.photographer)}"><img src="${photo.src.medium}" alt="${escapeHtml(photo.alt || 'Фото')}" loading="lazy"></a>`;
+      });
+      html += '</div>';
+      resultsContainer.insertAdjacentHTML('beforeend', html);
+    } catch (e) {
+      resultsContainer.insertAdjacentHTML('beforeend', `<p class="status-message">Ошибка фото-поиска: ${e.message}</p>`);
+    }
+  }
+
+  // Поиск видео в Pexels
+  async function doPexelsVideoSearch(query) {
+    try {
+      const res = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=6`, {
+        headers: { Authorization: PEXELS_API_KEY }
+      });
+      if (!res.ok) throw new Error(`Ошибка сети: ${res.status}`);
+      const data = await res.json();
+      if (!data.videos || data.videos.length === 0) {
+        resultsContainer.insertAdjacentHTML('beforeend', '<p class="status-message">Видео не найдены.</p>');
+        return;
+      }
+      let html = '<div class="video-list">';
+      data.videos.forEach(video => {
+        // Возьмём первый доступный файл с видео (обычно sd или hd)
+        const videoFile = video.video_files.find(f => f.quality === 'sd') || video.video_files[0];
+        if (videoFile) {
+          html += `<video controls preload="metadata" title="${escapeHtml(video.user.name)}"><source src="${videoFile.link}" type="video/mp4">Ваш браузер не поддерживает видео.</video>`;
+        }
+      });
+      html += '</div>';
+      resultsContainer.insertAdjacentHTML('beforeend', html);
+    } catch (e) {
+      resultsContainer.insertAdjacentHTML('beforeend', `<p class="status-message">Ошибка видео-поиска: ${e.message}</p>`);
+    }
+  }
+
+  // Поиск новостей Google (через Custom Search, фильтр по сайту новостей)
+  async function doNewsSearch(query) {
+    try {
+      // Google Custom Search не предоставляет бесплатный полноценный News API,
+      // но мы можем искать новости через Custom Search с фильтрацией по сайту или типу.
+      // Для простоты, сделаем запрос с "site:news.yandex.ru" (пример, можно поменять)
+      const newsQuery = `${query} site:news.yandex.ru`;
+      const res = await fetch(`https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${CX}&q=${encodeURIComponent(newsQuery)}&lr=lang_ru&num=8`);
+      if (!res.ok) throw new Error(`Ошибка сети: ${res.status}`);
+      const data = await res.json();
+      if (!data.items || data.items.length === 0) {
+        resultsContainer.insertAdjacentHTML('beforeend', '<p class="status-message">Новости не найдены.</p>');
+        return;
+      }
+      data.items.forEach(item => {
+        resultsContainer.insertAdjacentHTML('beforeend', `
+          <div class="news-item">
+            <a href="${item.link}" target="_blank" class="title">${escapeHtml(item.title)}</a>
+            <p class="snippet">${escapeHtml(item.snippet)}</p>
+          </div>`);
+      });
+    } catch (e) {
+      resultsContainer.insertAdjacentHTML('beforeend', `<p class="status-message">Ошибка новостей: ${e.message}</p>`);
+    }
+  }
+
+  // Показ карты через Google Maps Embed API
+  function showMap(query) {
+    const src = `https://www.google.com/maps/embed/v1/search?key=${API_KEY}&q=${encodeURIComponent(query)}`;
+    resultsContainer.innerHTML = `<div id="map-container"><iframe src="${src}" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>`;
+  }
+</script>
+
+</body>
+</html>
